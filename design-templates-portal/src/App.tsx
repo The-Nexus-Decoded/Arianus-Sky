@@ -30,18 +30,24 @@ const templates: Template[] = [
 
 const categories = ['All', 'Components', 'Framework', 'Full Stack']
 const frameworks = ['All', 'React', 'Next.js', 'Tailwind']
+const sortOptions = ['Popular', 'Name A-Z', 'Name Z-A']
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedFramework, setSelectedFramework] = useState('All')
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('Popular')
 
   const filtered = templates.filter(t => {
     const matchCategory = selectedCategory === 'All' || t.category === selectedCategory
     const matchFramework = selectedFramework === 'All' || t.framework === selectedFramework
     const matchSearch = search === '' || t.name.toLowerCase().includes(search.toLowerCase()) || t.description.toLowerCase().includes(search.toLowerCase())
     return matchCategory && matchFramework && matchSearch
+  }).sort((a, b) => {
+    if (sortBy === 'Name A-Z') return a.name.localeCompare(b.name)
+    if (sortBy === 'Name Z-A') return b.name.localeCompare(a.name)
+    return parseInt(b.stars) - parseInt(a.stars) // Popular (default)
   })
 
   return (
@@ -74,7 +80,7 @@ function App() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-12 justify-center">
+        <div className="flex flex-wrap gap-4 mb-8 justify-between items-center">
           <div className="flex gap-2">
             {categories.map(cat => (
               <button
@@ -90,20 +96,31 @@ function App() {
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
-            {frameworks.map(fw => (
-              <button
-                key={fw}
-                onClick={() => setSelectedFramework(fw)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedFramework === fw
-                    ? 'bg-cyan-500 text-black'
-                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                }`}
-              >
-                {fw}
-              </button>
-            ))}
+          <div className="flex gap-4 items-center">
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-full text-sm border border-zinc-700 focus:outline-none focus:border-cyan-500"
+            >
+              {sortOptions.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              {frameworks.map(fw => (
+                <button
+                  key={fw}
+                  onClick={() => setSelectedFramework(fw)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedFramework === fw
+                      ? 'bg-cyan-500 text-black'
+                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+                >
+                  {fw}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
