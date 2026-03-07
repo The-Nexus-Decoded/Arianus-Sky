@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Festival Vault - Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:1.5rem}
+.container{max-width:420px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:0.5rem;background:linear-gradient(135deg,#00ffc8,#7b2fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tagline{color:#8b949e;font-size:0.9rem;margin-bottom:1.5rem}
+.card{background:#161b22;border-radius:12px;padding:1.5rem;margin-bottom:1rem;border:1px solid #30363d}
+.balance{font-size:2rem;font-weight:700;margin:0.5rem 0}
+.balance span{color:#00ffc8}
+.status{display:flex;align-items:center;gap:8px;margin-top:1rem;padding-top:1rem;border-top:1px solid #30363d}
+.dot{width:10px;height:10px;border-radius:50%;background:#00ffc8;box-shadow:0 0 10px #00ffc8}
+.dot.locked{background:#f85149;box-shadow:0 0 10px #f85149;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.btn{padding:1rem;border-radius:8px;border:none;font-size:1rem;font-weight:500;cursor:pointer;width:100%;margin-bottom:0.5rem;transition:transform 0.2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-lock{background:linear-gradient(135deg,#f85149,#da3633);color:#fff}
+.btn-timelock{background:linear-gradient(135deg,#d29922,#bb8009);color:#000}
+.btn-send{background:linear-gradient(135deg,#238636,#2ea043);color:#fff}
+.btn-test{background:#21262d;color:#8b949e;border:1px solid #30363d}
+.tx{padding:0.75rem 0;border-bottom:1px solid #21262d;display:flex;justify-content:space-between}
+.tx:last-child{border:none}
+.tx-amount.in{color:#00ffc8}
+.tx-amount.out{color:#f85149}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎪 Festival Vault</h1>
+<p class="tagline">Anti-theft crypto wallet demo</p>
+
+<div class="card">
+<div>Balance</div>
+<div class="balance"><span>◎</span> 2,847.50</div>
+<div class="status">
+<div class="dot" id="statusDot"></div>
+<span id="statusText">Unprotected</span>
+</div>
+</div>
+
+<button class="btn btn-lock" onclick="panicLock()">🚨 PANIC LOCK</button>
+<button class="btn btn-timelock" onclick="toggleTimelock()">⏰ Toggle Timelock</button>
+<button class="btn btn-send" onclick="testTransfer()">↗️ Test Transfer</button>
+<button class="btn btn-test" onclick="simulateTheft()">🏃 Simulate Theft</button>
+
+<div class="card">
+<h3>Recent Activity</h3>
+<div id="txList">
+<div class="tx"><span>Received from Alice</span><span class="tx-amount in">+◎ 50.00</span></div>
+<div class="tx"><span>Tip to vendor</span><span class="tx-amount out">-◎ 5.00</span></div>
+<div class="tx"><span>Timelock blocked</span><span class="tx-amount">BLOCKED</span></div>
+</div>
+</div>
+</div>
+
+<script>
+let locked = false;
+let timelock = true;
+
+function panicLock() {
+  locked = true;
+  updateStatus();
+  addTx('🚨 PANIC LOCK activated', 'FROZEN');
+}
+
+function toggleTimelock() {
+  timelock = !timelock;
+  alert('Timelock ' + (timelock ? 'ENABLED' : 'DISABLED'));
+}
+
+function testTransfer() {
+  if (locked) {
+    addTx('Transfer blocked', 'BLOCKED');
+    alert('Wallet is frozen!');
+  } else if (timelock) {
+    addTx('Timelock blocked', 'BLOCKED');
+    alert('Timelock is active!');
+  } else {
+    addTx('Test transfer', '-◎ 10.00');
+    alert('Transfer sent!');
+  }
+}
+
+function simulateTheft() {
+  locked = true;
+  updateStatus();
+  addTx('🚨 THEFT DETECTED', 'FROZEN');
+  document.body.style.background = '#f85149';
+  setTimeout(() => { document.body.style.background = '#0d1117'; }, 500);
+}
+
+function updateStatus() {
+  document.getElementById('statusDot').className = locked ? 'dot locked' : 'dot';
+  document.getElementById('statusText').textContent = locked ? 'WALLET FROZEN' : 'Unprotected';
+}
+
+function addTx(detail, amount) {
+  const div = document.createElement('div');
+  div.className = 'tx';
+  div.innerHTML = '<span>' + detail + '</span><span class="tx-amount">' + amount + '</span>';
+  document.getElementById('txList').insertBefore(div, document.getElementById('txList').firstChild);
+}
+</script>
+</body>
+</html>
