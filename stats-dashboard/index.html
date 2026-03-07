@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Stats — Last 24 Hours</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #58a6ff;
+        }
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .card h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #8b949e;
+            margin-bottom: 1rem;
+        }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #21262d;
+        }
+        .stat:last-child { border-bottom: none; }
+        .stat-label { color: #8b949e; font-size: 0.9rem; }
+        .stat-value { 
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .stat-value.green { color: #3fb950; }
+        .stat-value.red { color: #f85149; }
+        .stat-value.blue { color: #58a6ff; }
+        .stat-value.yellow { color: #d29922; }
+        .activity-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .activity-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #21262d;
+            font-size: 0.85rem;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-item .time {
+            color: #8b949e;
+            font-size: 0.75rem;
+        }
+        .activity-item .repo {
+            color: #58a6ff;
+        }
+        .activity-item .action {
+            color: #8b949e;
+        }
+        .empty { color: #8b949e; font-style: italic; }
+        .refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .refresh:hover { background: #2ea043; }
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nexus Stats</h1>
+        <p class="subtitle">Last 24 hours • Updated <span id="updated"></span></p>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>GitHub Activity</h2>
+                <div class="stat">
+                    <span class="stat-label">Commits</span>
+                    <span class="stat-value blue" id="commits">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">PRs Opened</span>
+                    <span class="stat-value blue" id="prs-opened">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">PRs Merged</span>
+                    <span class="stat-value green" id="prs-merged">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Issues</span>
+                    <span class="stat-value yellow" id="issues">—</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Fleet Status</h2>
+                <div class="stat">
+                    <span class="stat-label">Zifnab (main)</span>
+                    <span class="stat-value green" id="zifnab-status">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Haplo (dev)</span>
+                    <span class="stat-value green" id="haplo-status">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Hugh (trade)</span>
+                    <span class="stat-value green" id="hugh-status">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Rate Guard</span>
+                    <span class="stat-value" id="rateguard-status">—</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Trading (24h)</h2>
+                <div class="stat">
+                    <span class="stat-label">Positions</span>
+                    <span class="stat-value" id="positions">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Volume</span>
+                    <span class="stat-value" id="volume">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Fees Earned</span>
+                    <span class="stat-value green" id="fees">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">P&L</span>
+                    <span class="stat-value" id="pnl">—</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Killfeed (24h)</h2>
+                <div class="stat">
+                    <span class="stat-label">Posts</span>
+                    <span class="stat-value blue" id="killfeed-posts">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Killer</span>
+                    <span class="stat-value" id="killfeed-killer">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Alpha</span>
+                    <span class="stat-value" id="killfeed-alpha">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Extreme</span>
+                    <span class="stat-value" id="killfeed-extreme">—</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Recent GitHub Activity</h2>
+            <div class="activity-list" id="github-activity">
+                <p class="empty">Loading...</p>
+            </div>
+        </div>
+    </div>
+    
+    <button class="refresh" onclick="loadStats()">↻ Refresh</button>
+    
+    <script>
+        const REPOS = ['The-Nexus', 'Pryan-Fire', 'Chelestra-Sea', 'Arianus-Sky', 'Abarrach-Stone'];
+        
+        async function fetchJSON(url) {
+            try {
+                const res = await fetch(url);
+                return await res.json();
+            } catch { return null; }
+        }
+        
+        async function loadStats() {
+            document.getElementById('updated').textContent = new Date().toLocaleString();
+            
+            // Load all stats in parallel
+            const [ghStats, fleet, trading, killfeed] = await Promise.all([
+                fetchJSON('/api/stats/github'),
+                fetchJSON('/api/stats/fleet'),
+                fetchJSON('/api/stats/trading'),
+                fetchJSON('/api/stats/killfeed')
+            ]);
+            
+            // GitHub
+            if (ghStats) {
+                document.getElementById('commits').textContent = ghStats.commits || 0;
+                document.getElementById('prs-opened').textContent = ghStats.prs_opened || 0;
+                document.getElementById('prs-merged').textContent = ghStats.prs_merged || 0;
+                document.getElementById('issues').textContent = ghStats.issues || 0;
+                
+                const activityEl = document.getElementById('github-activity');
+                if (ghStats.activity && ghStats.activity.length) {
+                    activityEl.innerHTML = ghStats.activity.map(a => `
+                        <div class="activity-item">
+                            <span class="repo">${a.repo}</span>
+                            <span class="action">${a.action}</span>
+                            <span class="time">${a.time}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    activityEl.innerHTML = '<p class="empty">No activity</p>';
+                }
+            }
+            
+            // Fleet
+            if (fleet) {
+                document.getElementById('zifnab-status').textContent = fleet.zifnab || '—';
+                document.getElementById('haplo-status').textContent = fleet.haplo || '—';
+                document.getElementById('hugh-status').textContent = fleet.hugh || '—';
+                document.getElementById('rateguard-status').textContent = fleet.rate_guard || '—';
+            }
+            
+            // Trading
+            if (trading) {
+                document.getElementById('positions').textContent = trading.positions || 0;
+                document.getElementById('volume').textContent = trading.volume ? `$${trading.volume.toLocaleString()}` : '—';
+                document.getElementById('fees').textContent = trading.fees ? `$${trading.fees.toFixed(2)}` : '—';
+                const pnlEl = document.getElementById('pnl');
+                pnlEl.textContent = trading.pnl !== undefined ? `$${trading.pnl.toFixed(2)}` : '—';
+                pnlEl.className = 'stat-value ' + (trading.pnl >= 0 ? 'green' : 'red');
+            }
+            
+            // Killfeed
+            if (killfeed) {
+                document.getElementById('killfeed-posts').textContent = killfeed.total || 0;
+                document.getElementById('killfeed-killer').textContent = killfeed.killer || 0;
+                document.getElementById('killfeed-alpha').textContent = killfeed.alpha || 0;
+                document.getElementById('killfeed-extreme').textContent = killfeed.extreme || 0;
+            }
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html>

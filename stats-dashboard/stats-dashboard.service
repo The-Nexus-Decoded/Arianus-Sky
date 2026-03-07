@@ -1,0 +1,14 @@
+[Unit]
+Description=Nexus Stats Dashboard
+
+[Service]
+Type=simple
+WorkingDirectory=/data/openclaw/workspace/Arianus-Sky/stats-dashboard
+ExecStart=/usr/bin/python3 /data/openclaw/workspace/Arianus-Sky/stats-dashboard/api.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
