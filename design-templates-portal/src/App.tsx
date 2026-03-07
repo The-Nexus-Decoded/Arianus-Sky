@@ -35,11 +35,13 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedFramework, setSelectedFramework] = useState('All')
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [search, setSearch] = useState('')
 
   const filtered = templates.filter(t => {
     const matchCategory = selectedCategory === 'All' || t.category === selectedCategory
     const matchFramework = selectedFramework === 'All' || t.framework === selectedFramework
-    return matchCategory && matchFramework
+    const matchSearch = search === '' || t.name.toLowerCase().includes(search.toLowerCase()) || t.description.toLowerCase().includes(search.toLowerCase())
+    return matchCategory && matchFramework && matchSearch
   })
 
   return (
@@ -54,11 +56,21 @@ function App() {
 
       <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4 tracking-tight">Popular Design Templates</h2>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+          <p className="text-zinc-400 text-lg max-w-xl mx-auto mb-8">
             Browse the most used design templates and UI kits by development teams worldwide
           </p>
+          {/* Search */}
+          <div className="max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full px-5 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 transition-colors"
+            />
+          </div>
         </div>
 
         {/* Filters */}
