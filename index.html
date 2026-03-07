@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Guard Wallet — Demo</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .container { max-width: 420px; margin: 0 auto; }
+        h1 { font-size: 1.4rem; margin-bottom: 0.25rem; color: #58a6ff; }
+        .tagline { color: #8b949e; font-size: 0.85rem; margin-bottom: 1.5rem; }
+        
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .balance {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+        .balance-label { color: #8b949e; font-size: 0.85rem; text-transform: uppercase; }
+        .balance-amount { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            color: #3fb950;
+            margin: 0.5rem 0;
+        }
+        .balance-usd { color: #8b949e; font-size: 0.9rem; }
+        
+        .protection-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.75rem;
+        }
+        .btn-primary { background: #238636; color: white; }
+        .btn-primary:hover { background: #2ea043; }
+        .btn-secondary { background: #30363d; color: #e6edf3; }
+        .btn-danger { background: #da3633; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #21262d;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { font-size: 0.9rem; }
+        .setting-value { color: #8b949e; font-size: 0.85rem; }
+        .setting-status { 
+            font-size: 0.75rem; 
+            padding: 2px 8px; 
+            border-radius: 4px;
+        }
+        .status-active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+        .status-inactive { background: rgba(139, 148, 158, 0.15); color: #8b949e; }
+        
+        .geo-fence {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .geo-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(88, 166, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .geo-info h3 { font-size: 0.95rem; margin-bottom: 2px; }
+        .geo-info p { font-size: 0.8rem; color: #8b949e; }
+        
+        .tx-log {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .tx-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #21262d;
+            font-size: 0.85rem;
+        }
+        .tx-item:last-child { border-bottom: none; }
+        .tx-amount { color: #3fb950; }
+        .tx-amount.negative { color: #f85149; }
+        .tx-time { color: #8b949e; font-size: 0.75rem; }
+        
+        .alert {
+            background: rgba(210, 153, 34, 0.15);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            color: #d29922;
+            margin-bottom: 1rem;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 360px;
+        }
+        .modal h2 { margin-bottom: 1rem; }
+        .modal input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #e6edf3;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .modal .btn-group { display: flex; gap: 0.5rem; }
+        .modal .btn-group .btn { margin-bottom: 0; }
+        
+        .cooldown-bar {
+            height: 4px;
+            background: #21262d;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        .cooldown-fill {
+            height: 100%;
+            background: #d29922;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>🎪 Festival Guard</h1>
+            <p class="tagline">Anti-theft crypto wallet for festivals</p>
+            
+            <!-- Balance Card -->
+            <div class="card">
+                <div class="balance">
+                    <div class="balance-label">Protected Balance</div>
+                    <div class="balance-amount">₵ {{ balance.toFixed(2) }}</div>
+                    <div class="balance-usd">${{ (balance * 0.10).toFixed(2) }} USD</div>
+                    <div class="protection-badge">
+                        <span>🛡️</span> Geo-Fence Active
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Geo Fence Status -->
+            <div class="card">
+                <div class="geo-fence">
+                    <div class="geo-icon">📍</div>
+                    <div class="geo-info">
+                        <h3>{{ currentLocation }}</h3>
+                        <p>Distance to festival: {{ distanceToFence }}m</p>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Festival Perimeter</span>
+                    <span class="setting-status status-active">ACTIVE</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">GPS Tracking</span>
+                    <span class="setting-status status-active">ENABLED</span>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <button class="btn btn-primary" @click="showSend = true">
+                📤 Send Funds
+            </button>
+            <button class="btn btn-secondary" @click="showGuardian = true">
+                👥 Guardian Request
+            </button>
+            
+            <!-- Security Settings -->
+            <div class="card">
+                <h3 style="margin-bottom: 1rem; font-size: 0.9rem; color: #8b949e;">SECURITY LAYERS</h3>
+                
+                <div class="setting-row">
+                    <span class="setting-label">Daily Limit</span>
+                    <span class="setting-value">₵ 500</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Large Withdrawal Cooldown</span>
+                    <span class="setting-value">24 hours</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Guardian Approval</span>
+                    <span class="setting-value">2 of 3</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Geo-Fence Radius</span>
+                    <span class="setting-value">500m</span>
+                </div>
+                
+                <div v-if="cooldownRemaining > 0" style="margin-top: 1rem;">
+                    <div style="font-size: 0.85rem; color: #d29922;">
+                        ⏳ Large withdrawal pending: {{ formatCooldown(cooldownRemaining) }}
+                    </div>
+                    <div class="cooldown-bar">
+                        <div class="cooldown-fill" :style="{width: (cooldownRemaining / 86400 * 100) + '%'}"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div class="card">
+                <h3 style="margin-bottom: 1rem; font-size: 0.9rem; color: #8b949e;">RECENT TRANSACTIONS</h3>
+                <div class="tx-log">
+                    <div v-for="tx in transactions" :key="tx.id" class="tx-item">
+                        <div>
+                            <div>{{ tx.type }}</div>
+                            <div class="tx-time">{{ tx.time }}</div>
+                        </div>
+                        <div class="tx-amount" :class="{negative: tx.amount < 0}">
+                            {{ tx.amount >= 0 ? '+' : '' }}₵ {{ tx.amount.toFixed(2) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Send Modal -->
+            <div v-if="showSend" class="modal-overlay" @click.self="showSend = false">
+                <div class="modal">
+                    <h2>Send Funds</h2>
+                    <div class="alert" v-if="sendAmount > 500">
+                        ⚠️ Large withdrawal! Requires 24h cooldown + guardian approval.
+                    </div>
+                    <input type="number" v-model="sendAmount" placeholder="Amount in SOL" />
+                    <input type="text" placeholder="Recipient address" />
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" @click="showSend = false">Cancel</button>
+                        <button class="btn btn-primary" @click="sendFunds">Confirm</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Guardian Modal -->
+            <div v-if="showGuardian" class="modal-overlay" @click.self="showGuardian = false">
+                <div class="modal">
+                    <h2>Request Guardian</h2>
+                    <p style="color: #8b949e; font-size: 0.85rem; margin-bottom: 1rem;">
+                        Request a temporary guardian for emergency access.
+                    </p>
+                    <input type="text" placeholder="Guardian Discord @handle" />
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" @click="showGuardian = false">Cancel</button>
+                        <button class="btn btn-primary" @click="requestGuardian">Send Request</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const { createApp, ref, computed } = Vue;
+        
+        createApp({
+            setup() {
+                const balance = ref(2847.50);
+                const currentLocation = ref('Main Stage - 120m inside fence');
+                const distanceToFence = ref(120);
+                const cooldownRemaining = ref(0);
+                const showSend = ref(false);
+                const showGuardian = ref(false);
+                const sendAmount = ref(0);
+                
+                const transactions = ref([
+                    { id: 1, type: '🍺 Beer Payment', time: '2 min ago', amount: -15.00 },
+                    { id: 2, type: '🎤 Merch Purchase', time: '15 min ago', amount: -45.00 },
+                    { id: 3, type: '💰 Deposit', time: '1 hour ago', amount: 500.00 },
+                    { id: 4, type: '🍔 Food Truck', time: '2 hours ago', amount: -22.50 },
+                    { id: 5, type: '🛡️ Guardian Approve', time: '3 hours ago', amount: 0 },
+                ]);
+                
+                const formatCooldown = (secs) => {
+                    const h = Math.floor(secs / 3600);
+                    const m = Math.floor((secs % 3600) / 60);
+                    return `${h}h ${m}m remaining`;
+                };
+                
+                const sendFunds = () => {
+                    if (sendAmount.value > 500) {
+                        cooldownRemaining.value = 86400; // 24 hours
+                        alert('Large withdrawal initiated! 24h cooldown started. Guardian approval required.');
+                    } else {
+                        balance.value -= sendAmount.value;
+                        transactions.value.unshift({
+                            id: Date.now(),
+                            type: '📤 Sent',
+                            time: 'Just now',
+                            amount: -sendAmount.value
+                        });
+                    }
+                    showSend.value = false;
+                    sendAmount.value = 0;
+                };
+                
+                const requestGuardian = () => {
+                    alert('Guardian request sent via Discord! They'll have 30 minutes to approve.');
+                    showGuardian.value = false;
+                };
+                
+                // Simulate cooldown countdown
+                setInterval(() => {
+                    if (cooldownRemaining.value > 0) {
+                        cooldownRemaining.value--;
+                    }
+                }, 1000);
+                
+                return {
+                    balance, currentLocation, distanceToFence, cooldownRemaining,
+                    showSend, showGuardian, sendAmount, transactions,
+                    formatCooldown, sendFunds, requestGuardian
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
