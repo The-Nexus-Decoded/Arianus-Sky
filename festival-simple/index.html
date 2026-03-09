@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Vault</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a12;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 400px; margin: 0 auto; }
+        h1 { 
+            font-size: 24px; 
+            background: linear-gradient(135deg, #00ffc8, #7b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .tagline { text-align: center; color: #666; font-size: 12px; margin-bottom: 20px; }
+        
+        .card {
+            background: #161622;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .balance { text-align: center; }
+        .balance-label { color: #666; font-size: 12px; text-transform: uppercase; }
+        .balance-amount { font-size: 42px; font-weight: 700; color: #00ffc8; margin: 10px 0; }
+        .balance-usd { color: #666; }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+        .status-row:last-child { border-bottom: none; }
+        
+        .toggle {
+            width: 50px; height: 26px;
+            background: #333;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .toggle.on { background: #00ffc8; }
+        .toggle::after {
+            content: ''; position: absolute;
+            width: 22px; height: 22px;
+            background: #fff; border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: transform 0.3s;
+        }
+        .toggle.on::after { transform: translateX(24px); }
+        
+        .btn {
+            width: 100%; padding: 14px;
+            border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600;
+            cursor: pointer; margin-bottom: 10px;
+        }
+        .btn-panic { 
+            background: linear-gradient(135deg, #ff4444, #cc0000); 
+            color: white;
+        }
+        .btn-transfer { 
+            background: #222; 
+            color: #00ffc8;
+            border: 1px solid #00ffc8;
+        }
+        .btn-theft {
+            background: #332200;
+            color: #ffaa00;
+            font-size: 13px;
+        }
+        
+        .tx-list { max-height: 200px; overflow-y: auto; }
+        .tx-item {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #222;
+            font-size: 13px;
+        }
+        .tx-plus { color: #00ffc8; }
+        .tx-minus { color: #ff4444; }
+        .tx-blocked { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎪 Festival Vault</h1>
+        <p class="tagline">Anti-theft wallet demo</p>
+        
+        <div class="card">
+            <div class="balance">
+                <div class="balance-label">Protected Balance</div>
+                <div class="balance-amount">◎ 2,847</div>
+                <div class="balance-usd">$284.70 USD</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="status-row">
+                <span>🔒 Timelock (no transfers during event)</span>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="status-row">
+                <span>📍 Geofence (stay in festival)</span>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="status-row">
+                <span>👥 Guardian Multisig</span>
+                <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+        </div>
+        
+        <button class="btn btn-panic" onclick="panicLock()">🚨 PANIC LOCK</button>
+        <button class="btn btn-transfer" onclick="doTransfer()">↑ Test Transfer</button>
+        <button class="btn btn-theft" onclick="simulateTheft()">⚠️ Simulate Theft</button>
+        
+        <div class="card">
+            <div style="color: #666; font-size: 12px; margin-bottom: 10px;">RECENT</div>
+            <div class="tx-list" id="txList">
+                <div class="tx-item"><span>🍺 Beer vendor</span><span class="tx-minus">-◎ 15</span></div>
+                <div class="tx-item"><span>↓ From Alice</span><span class="tx-plus">+◎ 50</span></div>
+                <div class="tx-item"><span>🔒 Timelock blocked</span><span class="tx-blocked">BLOCKED</span></div>
+                <div class="tx-item"><span>🎤 Merch</span><span class="tx-minus">-◎ 45</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let locked = false;
+        
+        function panicLock() {
+            locked = true;
+            addTx('🚨 PANIC LOCK', 'FROZEN', 'blocked');
+            alert('WALLET FROZEN - All transactions blocked');
+        }
+        
+        function doTransfer() {
+            if (locked) {
+                addTx('Transfer attempt', 'BLOCKED', 'blocked');
+                alert('Wallet is locked!');
+            } else {
+                addTx('↑ Test transfer', '-◎ 10', 'minus');
+            }
+        }
+        
+        function simulateTheft() {
+            locked = true;
+            addTx('🚨 THEFT DETECTED', 'FROZEN', 'blocked');
+            alert('⚠️ THEFT DETECTED! Wallet frozen. Guardians notified.');
+        }
+        
+        function addTx(msg, amt, cls) {
+            const list = document.getElementById('txList');
+            const div = document.createElement('div');
+            div.className = 'tx-item';
+            div.innerHTML = `<span>${msg}</span><span class="tx-${cls}">${amt}</span>`;
+            list.insertBefore(div, list.firstChild);
+        }
+    </script>
+</body>
+</html>

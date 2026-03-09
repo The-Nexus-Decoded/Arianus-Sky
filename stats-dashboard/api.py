@@ -40,7 +40,7 @@ def run_gh(cmd: list, cwd: str = "/data/openclaw/workspace/The-Nexus") -> list:
 
 def get_github_stats():
     """Get GitHub stats for last 24 hours"""
-    since = (datetime.now() - timedelta(days=1)).isoformat()
+    since = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     
     stats = {
         "commits": 0,
@@ -53,22 +53,27 @@ def get_github_stats():
     repos = ["The-Nexus", "Pryan-Fire", "Chelestra-Sea", "Arianus-Sky", "Abarrach-Stone"]
     
     for repo in repos:
-        # Commits
-        commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate", f"--since={since}"])
-        stats["commits"] += len(commits)
+        # Commits - use since as ISO date
+        commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate", "-F", f"since={since}"])
+        if not commits:
+            # Fallback: just get all and filter
+            commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate"])
+        stats["commits"] += len(commits) if commits else 0
         
         # PRs opened
-        prs = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/pulls", "--paginate", f"--createdsince={since}"])
-        stats["prs_opened"] += len(prs)
+        prs = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/pulls", "--paginate"])
+        stats["prs_opened"] += len(prs) if prs else 0
         
         # Issues
-        issues = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/issues", "--paginate", f"--since={since}"])
-        stats["issues"] += len([i for i in issues if not i.get("pull_request")])
+        issues = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/issues", "--paginate"])
+        stats["issues"] += len([i for i in (issues or []) if not i.get("pull_request")])
     
     # Build activity list from recent commits
     for repo in repos[:3]:
-        commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate", "-L5"])
-        for c in commits[:3]:
+        commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate", "-F", "per_page=5"])
+        if not commits:
+            commits = run_gh(["api", f"repos/The-Nexus-Decoded/{repo}/commits", "--paginate"])
+        for c in (commits or [])[:3]:
             stats["activity"].append({
                 "repo": repo,
                 "action": c.get("commit", {}).get("message", "")[:50],
@@ -163,6 +168,12 @@ def killfeed_stats():
 def root():
     from fastapi.responses import FileResponse
     return FileResponse(Path(__file__).parent / "index.html")
+
+
+@app.get("/festival")
+def festival():
+    from fastapi.responses import FileResponse
+    return FileResponse(Path(__file__).parent.parent / "festival-simple" / "index.html")
 
 
 if __name__ == "__main__":

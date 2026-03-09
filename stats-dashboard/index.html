@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Stats — Last 24 Hours</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -94,6 +95,17 @@
             font-size: 0.9rem;
         }
         .refresh:hover { background: #2ea043; }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-dot.online { background: #3fb950; }
+        .status-dot.offline { background: #f85149; }
+        .status-dot.error { background: #d29922; }
+        .loading { text-align: center; padding: 2rem; color: #8b949e; }
         @media (max-width: 600px) {
             body { padding: 1rem; }
             .grid { grid-template-columns: 1fr; }
@@ -101,172 +113,153 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Nexus Stats</h1>
-        <p class="subtitle">Last 24 hours • Updated <span id="updated"></span></p>
-        
-        <div class="grid">
-            <div class="card">
-                <h2>GitHub Activity</h2>
-                <div class="stat">
-                    <span class="stat-label">Commits</span>
-                    <span class="stat-value blue" id="commits">—</span>
+    <div id="app">
+        <div class="container">
+            <h1>Nexus Stats</h1>
+            <p class="subtitle">Last 24 hours • Updated {{ updated }}</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <h2>GitHub Activity</h2>
+                    <div class="stat">
+                        <span class="stat-label">Commits</span>
+                        <span class="stat-value blue">{{ gh.commits }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">PRs Opened</span>
+                        <span class="stat-value blue">{{ gh.prs_opened }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">PRs Merged</span>
+                        <span class="stat-value green">{{ gh.prs_merged }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Issues</span>
+                        <span class="stat-value yellow">{{ gh.issues }}</span>
+                    </div>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">PRs Opened</span>
-                    <span class="stat-value blue" id="prs-opened">—</span>
+                
+                <div class="card">
+                    <h2>Fleet Status</h2>
+                    <div class="stat">
+                        <span class="stat-label">Zifnab (main)</span>
+                        <span class="stat-value">
+                            <span class="status-dot" :class="fleet.zifnab"></span>{{ fleet.zifnab }}
+                        </span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Haplo (dev)</span>
+                        <span class="stat-value">
+                            <span class="status-dot" :class="fleet.haplo"></span>{{ fleet.haplo }}
+                        </span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Hugh (trade)</span>
+                        <span class="stat-value">
+                            <span class="status-dot" :class="fleet.hugh"></span>{{ fleet.hugh }}
+                        </span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Rate Guard</span>
+                        <span class="stat-value">
+                            <span class="status-dot" :class="fleet.rate_guard"></span>{{ fleet.rate_guard }}
+                        </span>
+                    </div>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">PRs Merged</span>
-                    <span class="stat-value green" id="prs-merged">—</span>
+                
+                <div class="card">
+                    <h2>Trading (24h)</h2>
+                    <div class="stat">
+                        <span class="stat-label">Positions</span>
+                        <span class="stat-value">{{ trading.positions }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Volume</span>
+                        <span class="stat-value">{{ formatUSD(trading.volume) }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Fees Earned</span>
+                        <span class="stat-value green">{{ formatUSD(trading.fees) }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">P&L</span>
+                        <span class="stat-value" :class="trading.pnl >= 0 ? 'green' : 'red'">
+                            {{ formatUSD(trading.pnl) }}
+                        </span>
+                    </div>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">Issues</span>
-                    <span class="stat-value yellow" id="issues">—</span>
+                
+                <div class="card">
+                    <h2>Killfeed (24h)</h2>
+                    <div class="stat">
+                        <span class="stat-label">Posts</span>
+                        <span class="stat-value blue">{{ killfeed.total }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Killer</span>
+                        <span class="stat-value">{{ killfeed.killer }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Alpha</span>
+                        <span class="stat-value">{{ killfeed.alpha }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Extreme</span>
+                        <span class="stat-value">{{ killfeed.extreme }}</span>
+                    </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2>Fleet Status</h2>
-                <div class="stat">
-                    <span class="stat-label">Zifnab (main)</span>
-                    <span class="stat-value green" id="zifnab-status">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Haplo (dev)</span>
-                    <span class="stat-value green" id="haplo-status">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Hugh (trade)</span>
-                    <span class="stat-value green" id="hugh-status">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Rate Guard</span>
-                    <span class="stat-value" id="rateguard-status">—</span>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Trading (24h)</h2>
-                <div class="stat">
-                    <span class="stat-label">Positions</span>
-                    <span class="stat-value" id="positions">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Volume</span>
-                    <span class="stat-value" id="volume">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Fees Earned</span>
-                    <span class="stat-value green" id="fees">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">P&L</span>
-                    <span class="stat-value" id="pnl">—</span>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Killfeed (24h)</h2>
-                <div class="stat">
-                    <span class="stat-label">Posts</span>
-                    <span class="stat-value blue" id="killfeed-posts">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Killer</span>
-                    <span class="stat-value" id="killfeed-killer">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Alpha</span>
-                    <span class="stat-value" id="killfeed-alpha">—</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Extreme</span>
-                    <span class="stat-value" id="killfeed-extreme">—</span>
+                <h2>Recent GitHub Activity</h2>
+                <div class="activity-list">
+                    <div v-if="gh.activity.length === 0" class="empty">No activity</div>
+                    <div v-else v-for="(item, i) in gh.activity" :key="i" class="activity-item">
+                        <span class="repo">{{ item.repo }}</span>
+                        <span class="action">{{ item.action }}</span>
+                        <span class="time">{{ item.time }}</span>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="card">
-            <h2>Recent GitHub Activity</h2>
-            <div class="activity-list" id="github-activity">
-                <p class="empty">Loading...</p>
-            </div>
-        </div>
+        <button class="refresh" @click="loadStats">↻ Refresh</button>
     </div>
     
-    <button class="refresh" onclick="loadStats()">↻ Refresh</button>
-    
     <script>
-        const REPOS = ['The-Nexus', 'Pryan-Fire', 'Chelestra-Sea', 'Arianus-Sky', 'Abarrach-Stone'];
+        const { createApp, ref, onMounted } = Vue;
         
-        async function fetchJSON(url) {
-            try {
-                const res = await fetch(url);
-                return await res.json();
-            } catch { return null; }
-        }
-        
-        async function loadStats() {
-            document.getElementById('updated').textContent = new Date().toLocaleString();
-            
-            // Load all stats in parallel
-            const [ghStats, fleet, trading, killfeed] = await Promise.all([
-                fetchJSON('/api/stats/github'),
-                fetchJSON('/api/stats/fleet'),
-                fetchJSON('/api/stats/trading'),
-                fetchJSON('/api/stats/killfeed')
-            ]);
-            
-            // GitHub
-            if (ghStats) {
-                document.getElementById('commits').textContent = ghStats.commits || 0;
-                document.getElementById('prs-opened').textContent = ghStats.prs_opened || 0;
-                document.getElementById('prs-merged').textContent = ghStats.prs_merged || 0;
-                document.getElementById('issues').textContent = ghStats.issues || 0;
+        createApp({
+            setup() {
+                const updated = ref('');
+                const gh = ref({ commits: 0, prs_opened: 0, prs_merged: 0, issues: 0, activity: [] });
+                const fleet = ref({ zifnab: '—', haplo: '—', hugh: '—', rate_guard: '—' });
+                const trading = ref({ positions: 0, volume: 0, fees: 0, pnl: 0 });
+                const killfeed = ref({ total: 0, killer: 0, alpha: 0, extreme: 0 });
                 
-                const activityEl = document.getElementById('github-activity');
-                if (ghStats.activity && ghStats.activity.length) {
-                    activityEl.innerHTML = ghStats.activity.map(a => `
-                        <div class="activity-item">
-                            <span class="repo">${a.repo}</span>
-                            <span class="action">${a.action}</span>
-                            <span class="time">${a.time}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    activityEl.innerHTML = '<p class="empty">No activity</p>';
-                }
+                const formatUSD = (val) => val ? '$' + val.toLocaleString() : '—';
+                
+                const loadStats = async () => {
+                    updated.value = new Date().toLocaleString();
+                    
+                    const [ghData, fleetData, tradingData, killfeedData] = await Promise.all([
+                        fetch('/api/stats/github').then(r => r.json()).catch(() => ({})),
+                        fetch('/api/stats/fleet').then(r => r.json()).catch(() => ({})),
+                        fetch('/api/stats/trading').then(r => r.json()).catch(() => ({})),
+                        fetch('/api/stats/killfeed').then(r => r.json()).catch(() => ({}))
+                    ]);
+                    
+                    gh.value = ghData || gh.value;
+                    fleet.value = fleetData || fleet.value;
+                    trading.value = tradingData || trading.value;
+                    killfeed.value = killfeedData || killfeed.value;
+                };
+                
+                onMounted(loadStats);
+                
+                return { updated, gh, fleet, trading, killfeed, loadStats, formatUSD };
             }
-            
-            // Fleet
-            if (fleet) {
-                document.getElementById('zifnab-status').textContent = fleet.zifnab || '—';
-                document.getElementById('haplo-status').textContent = fleet.haplo || '—';
-                document.getElementById('hugh-status').textContent = fleet.hugh || '—';
-                document.getElementById('rateguard-status').textContent = fleet.rate_guard || '—';
-            }
-            
-            // Trading
-            if (trading) {
-                document.getElementById('positions').textContent = trading.positions || 0;
-                document.getElementById('volume').textContent = trading.volume ? `$${trading.volume.toLocaleString()}` : '—';
-                document.getElementById('fees').textContent = trading.fees ? `$${trading.fees.toFixed(2)}` : '—';
-                const pnlEl = document.getElementById('pnl');
-                pnlEl.textContent = trading.pnl !== undefined ? `$${trading.pnl.toFixed(2)}` : '—';
-                pnlEl.className = 'stat-value ' + (trading.pnl >= 0 ? 'green' : 'red');
-            }
-            
-            // Killfeed
-            if (killfeed) {
-                document.getElementById('killfeed-posts').textContent = killfeed.total || 0;
-                document.getElementById('killfeed-killer').textContent = killfeed.killer || 0;
-                document.getElementById('killfeed-alpha').textContent = killfeed.alpha || 0;
-                document.getElementById('killfeed-extreme').textContent = killfeed.extreme || 0;
-            }
-        }
-        
-        loadStats();
+        }).mount('#app');
     </script>
 </body>
 </html>
