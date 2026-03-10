@@ -109,6 +109,24 @@ Keep short — stale spatial data is dangerous.
 - Velocity-aware prediction
 - Jitter >15ms: hold-last + extrapolate
 
+## 15. Error Codes (Implemented)
+
+| Code | Meaning |
+|------|---------|
+| `INVALID_GESTURE` | Malformed gesture packet |
+| `STATE_CONFLICT` | Server state diverged |
+| `OUT_OF_BOUNDS` | Coordinates outside valid range |
+| `TIMEOUT` | Intent queue timeout |
+| `INTERNAL_ERROR` | Server failure |
+
+## 16. Timing Constants
+
+| Parameter | Value |
+|-----------|-------|
+| `StateBroadcast.ttl_ms` | Cache TTL |
+| `LATENCY_BUDGET_MS` | 100ms |
+| ChargeEvent | start/stop events |
+
 ## V1 Scope
 
 **In scope:**
