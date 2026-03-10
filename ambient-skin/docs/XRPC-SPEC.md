@@ -92,3 +92,12 @@ Keep short — stale spatial data is dangerous.
 - `cast`: discrete (fire-and-forget)
 - `charge`: continuous (hold to build power)
 - Optional `progress` field for UI sync edge cases
+
+## V1 Scope
+
+**In scope:**
+- Mobile → Arianus-Sky: XY-gesture, mode toggle, thermal signaling, haptics, AttentionLease, ProximityWake
+- Arianus-Sky → Mobile: intent consumption, 2D mirror, thermal push
+
+**Excluded (V2):**
+- Real-time spatial presence
