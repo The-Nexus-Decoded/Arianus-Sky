@@ -6,7 +6,7 @@ Mobile-first ambient display states for XR collaboration.
 
 | State | Trigger | Behavior |
 | ----- | ------- | -------- |
-| `proximity_wake` | Proximity sensor detects approach | Wake display, enable preview |
+| `proximity_wake` | Proximity sensor detects approach | Wake display + show **context card** (glanceable summary — decision interstitial: engage or dismiss) |
 | `silence_toggle` | Physical silent switch | Suppress haptic/audio feedback |
 | `pocket_context` | Device in pocket / dark > 30s | Deferred rendering, queue updates |
 
