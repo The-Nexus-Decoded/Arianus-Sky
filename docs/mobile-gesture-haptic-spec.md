@@ -1,6 +1,6 @@
 # Mobile XR Gesture-Haptic Specification
 
-**Version:** 0.3  
+**Version:** 0.4  
 **Author:** Orla (UI/UX Design Lead)  
 **Status:** Ready for Review  
 **Last Updated:** 2026-03-10
@@ -187,7 +187,85 @@ Non-intrusive presence indicator. User engages on their terms.
 
 ---
 
-## 6. Delivery Notes
+## 6. TypeScript Types
+
+```typescript
+// src/types/gesture.ts
+
+// Client → Server
+export interface GesturePayload {
+  type: 'gesture' | 'thermal' | 'proximity';
+  timestamp: number;
+  data: GestureData | ThermalData | ProximityData;
+}
+
+export interface GestureData {
+  gesture: GestureType;
+  confidence: number;        // 0.0–1.0
+  position?: { x: number; y: number; z?: number };
+  velocity?: number;
+  duration?: number;
+}
+
+export type GestureType = 
+  | 'flick' | 'hold' | 'circle' | 'pinch' 
+  | 'double-tap' | 'long-press'
+  | 'tap' | 'swipe_left' | 'swipe_right';  // Patryn gestures
+
+export interface ThermalData {
+  chipTemp: number;          // Celsius
+  timestamp: number;
+}
+
+export interface ProximityData {
+  distance: number;          // centimeters
+  timestamp: number;
+}
+
+// Server → Client
+export interface RenderPayload {
+  type: 'preview' | 'haptic' | 'state' | 'thermal_adapt';
+  timestamp: number;
+  data: PreviewData | HapticData | StateData | ThermalAdaptData;
+}
+
+export interface PreviewData {
+  intent: string;
+  visual: VisualPreview;
+  duration: number;          // ms
+}
+
+export type VisualPreview = 
+  | 'ghost_wireframe' | 'glow_pulse' | 'rotation_ring' 
+  | 'highlight_outline' | 'menu_skin_flash' | 'arrow_wipe_left'
+  | 'arrow_wipe_right' | 'glow_cyan' | 'glow_red';
+
+export interface HapticData {
+  pattern: HapticPattern;
+  intensity: 'low' | 'medium' | 'high';
+  duration?: number;          // ms
+  gaps?: number[];            // ms between pulses
+}
+
+export type HapticPattern = 
+  | 'single' | 'double' | 'triple' | 'continuous';
+
+export interface StateData {
+  mode: 'sartan' | 'patryn' | 'ambient';
+  previewQueue: number;       // 0–3
+}
+
+export interface ThermalAdaptData {
+  tier: ThermalTier;
+  actions: string[];
+}
+
+export type ThermalTier = 0 | 1 | 2 | 3 | 4;
+```
+
+---
+
+## 7. Delivery Notes
 
 ### Hand-off to Paithan (Mobile)
 - WebSocket client implementation per Section 1.2
