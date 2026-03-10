@@ -64,3 +64,7 @@ Collaborative XR manipulation between VR (Sartan) and Mobile (Patryn).
 ### 3. Haptic Patterns
 
 | Event                    | Pattern                      | Intensity |
+| ------------------------ | ---------------------------- | --------- |
+| Intent sent (double-tap) | Single 35ms pulse            | Medium    |
+| Confirmed (rotate)       | Double 50ms pulse, 80ms gap  | High      |
+| Error (long-press)       | Triple 40ms pulse, 50ms gaps | High      |
