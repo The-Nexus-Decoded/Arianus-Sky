@@ -274,7 +274,8 @@ export type ThermalTier = 0 | 1 | 2 | 3 | 4;
 
 ### Hand-off to Samah (Mobile)
 - Gesture recognition engine
-- Confidence scoring per Section 4.2
+- Confidence scoring per Section 4.3
+- Import types from Section 6 (`src/types/gesture.ts`)
 
 ### Dependencies
 - `spatial_hint` field in VR Sync (from Haplo)
