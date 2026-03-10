@@ -55,3 +55,24 @@ interface XRpcError {
 | `cast` | Discrete | Fires once. Optional `progress` field for wind-up animations |
 
 **Edge case:** If `cast` requires UI sync (e.g., "casting... 50%"), opt-in via `progress` field. Otherwise keep simple.
+
+## 7. Error Response Format
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND" | "OUT_OF_BOUNDS" | "TIMEOUT" | "INVALID_GESTURE",
+    "message": "Human-readable",
+    "details": { "received": { "x": 0.5, "y": 1.2 } } // optional context
+  }
+}
+```
+
+## 8. Cache TTL
+
+| Context | TTL | Invalidation |
+|---------|-----|--------------|
+| Background (app hidden) | 30s | On foreground |
+| Handoff (mobile ↔ headset) | 60s | Re-validate on arrival |
+
+Keep short — stale spatial data is dangerous.
