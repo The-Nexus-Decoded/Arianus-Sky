@@ -7,11 +7,11 @@
 
 ## 1. User State → UX Behavior Mapping
 
-| User State | UX Behavior | Architectural Promise |
-|------------|-------------|----------------------|
-| **Idle** | No active attention engagement. System monitors for intent signals. | `AttentionLease` inactive. Spatial hints dormant. |
-| **Attending** | User has signaled intent. `AttentionLease` timer starts. TTL/Priority tier applied based on intent type. | Lease promise active. System honors the TTL. Optimistic UI enabled. |
-| **Immersive** | Full spatial focus achieved. `SpatialHint` resolved to `3d_spawn`. User attention fully captured. | Spatial layer owns the experience. 90fps target. Graceful mobile fallback maintained. |
+| User State | ImmersionDepth | UX Behavior | Architectural Promise |
+|------------|----------------|-------------|----------------------|
+| **Idle** | `passive` | No active attention engagement. System monitors for intent signals. | `AttentionLease` inactive. Spatial hints dormant. |
+| **Attending** | `attentive` | User has signaled intent. `AttentionLease` timer starts. TTL/Priority tier applied based on intent type. | Lease promise active. System honors the TTL. Optimistic UI enabled. |
+| **Immersive** | `urgent` | Full spatial focus achieved. `SpatialHint` resolved to `3d_spawn`. User attention fully captured. | Spatial layer owns the experience. 90fps target. Graceful mobile fallback maintained. |
 
 ---
 
@@ -89,5 +89,26 @@ This document is the **contract** between UX (Orla) and Architecture (Haplo).
 
 ---
 
+## 5. Voice Return Integration (Paithan)
+
+Mobile-to-spatial voice intent pipeline:
+
+```
+Mobile App (Siri/Google Assistant)
+    │
+    ▼ [intent translation]
+AttentionLease.update(intent: "stepping_away", depth: passive)
+    │
+    ▼
+Spatial Layer (receives lease update)
+```
+
+**Scenario:** "Siri, tell VR I'm stepping out" → Mobile app translates → Spatial layer updates `ImmersionDepth` to `passive`.
+
+**Owner:** Paithan (mobile integration)
+
+---
+
 ## Changelog
 - 2026-03-09: Initial draft with user-state → UX → architecture mapping
+- 2026-03-09: Added ImmersionDepth mapping + voice return ownership (Paithan)
