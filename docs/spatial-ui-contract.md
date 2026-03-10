@@ -23,7 +23,8 @@ Collaborative XR manipulation between VR (Sartan) and Mobile (Patryn).
     "uniform": true
   },
   "confidence": "0.0-1.0",
-  "user_can_override": true
+  "user_can_override": true,
+  "source": "menu"
 }
 ```
 
@@ -41,3 +42,15 @@ Collaborative XR manipulation between VR (Sartan) and Mobile (Patryn).
 - **Math:** visible width at 1m = 2 × tan(45°) × 1m = **2m world units**
 - **Conversion (1920px canvas):** 1 world unit = 960px → 44px touch target = ~0.046m at 1m
 - **Depth scaling:** world_units_per_px scales linearly with distance
+
+## Gesture-Haptic Protocol (Mobile → XR)
+
+### 1. Gesture → Visual Mapping
+
+| Gesture            | Intent      | Visual Feedback                                 |
+| ------------------ | ----------- | ----------------------------------------------- |
+| DOUBLE-TAP         | Intent sent | Glow (cyan)                                     |
+| ROTATE             | Confirmed   | Scale pulse (1.0 → 1.05 → 1.0, 200ms)           |
+| LONG-PRESS (500ms) | Error       | Red outline + shake (10px L-R, 3 cycles, 300ms) |
+
+### 2. Touch Surface Zones
