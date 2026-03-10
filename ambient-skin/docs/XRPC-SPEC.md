@@ -93,6 +93,22 @@ Keep short — stale spatial data is dangerous.
 - `charge`: continuous (hold to build power)
 - Optional `progress` field for UI sync edge cases
 
+## 12. Intent Delivery
+
+- **Best effort**: Next gesture overwrites previous
+- **Reliable**: ACK for COMMIT/UNDO (request receipt confirmation)
+
+## 13. NACK & Resend
+
+- Gap detected → delta re-send from last confirmed packet
+
+## 14. Interpolation
+
+- 3-packet buffer
+- Hermite spline (tension 0.5)
+- Velocity-aware prediction
+- Jitter >15ms: hold-last + extrapolate
+
 ## V1 Scope
 
 **In scope:**
