@@ -1,6 +1,6 @@
 # Mobile XR Gesture-Haptic Specification
 
-**Version:** 0.2  
+**Version:** 0.3  
 **Author:** Orla (UI/UX Design Lead)  
 **Status:** Ready for Review  
 **Last Updated:** 2026-03-10
@@ -150,7 +150,21 @@ Proactive thermal management before hardware throttling degrades experience.
 | double-tap | confirm | glow (cyan) | single 35ms (medium) | ✅ |
 | long-press (500ms) | error | red outline + shake | triple 40ms, 50ms gaps (high) | ✅ |
 
-### 4.2 Confirmation Threshold
+### 4.2 Patryn Gestures
+*Distinct vocabulary per Samah's direction — direct mapping, no translation layer.*
+
+| Gesture | Intent | Visual Preview | Haptic Pattern | Mobile Render |
+| ------- | ------ | ---------------| --------------- | --------------- |
+| tap | menu_select | menu_skin_flash | single 25ms (low) | ✅ |
+| swipe_left | navigate_back | arrow_wipe_left | single 30ms (medium) | ✅ |
+| swipe_right | navigate_forward | arrow_wipe_right | single 30ms (medium) | ✅ |
+| hold (800ms) | back | glow_red | double 40ms, 60ms gap (medium) | ✅ |
+| double-tap | confirm | glow_cyan | single 35ms (medium) | ✅ |
+| long-press (500ms) | error | red outline + shake | triple 40ms, 50ms gaps (high) | ✅ |
+
+**Note:** Patryn gestures render with `source: menu` (menu skin). Sartan gestures use default skin.
+
+### 4.3 Confirmation Threshold
 - **Confidence ≥ 0.85:** Immediate execution
 - **Confidence 0.60–0.84:** Queue for user confirmation (preview + haptic acknowledge)
 - **Confidence < 0.60:** Ignore, no feedback
