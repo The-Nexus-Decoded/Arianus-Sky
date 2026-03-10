@@ -10,7 +10,27 @@
  * | drag_x/y   | >30px       | translate X/Y | soft   |
  * | drag_z     | 0.85 conf   | translate Z   | medium |
  * | pinch      | scale delta | scale         | medium |
+ * 
+ * Touch Surface Zones (Orla):
+ * ┌─────────────────────────────────────┐
+ * │           TOUCH SURFACE             │
+ * ├─────────────────────────────────────┤
+ * │  ┌─────┐                   ┌─────┐  │
+ * │  │ NW  │     NORTH         │ NE  │  │
+ * │  └─────┘                   └─────┘  │
+ * │                                       │
+ * │  WEST          CENTER           EAST │
+ * │                                       │
+ * │  ┌─────┐                   ┌─────┐  │
+ * │  │ SW  │     SOUTH         │ SE  │  │
+ * │  └─────┘                   └─────┘  │
+ * └─────────────────────────────────────┘
  */
+
+export type TouchZone = 
+  | 'NW' | 'NE' | 'SW' | 'SE'
+  | 'NORTH' | 'SOUTH' | 'WEST' | 'EAST'
+  | 'CENTER';
 
 export type GestureType = 
   | 'tap' 
@@ -29,6 +49,7 @@ export interface GestureResult {
   output: string;
   haptic: HapticType;
   confidence: number;
+  zone?: TouchZone;
   metadata?: {
     duration?: number;
     distance?: { x: number; y: number; z?: number };
@@ -62,9 +83,19 @@ export class GestureRecognizer {
   private isLongPressTriggered: boolean = false;
   private longPressTimer: ReturnType<typeof setTimeout> | null = null;
   private initialPinchDistance: number = 0;
+  private surfaceWidth: number = 0;
+  private surfaceHeight: number = 0;
 
   constructor(config: Partial<GestureConfig> = {}) {
     this.config = { ...DEFAULT_GESTURE_CONFIG, ...config };
+  }
+
+  /**
+   * Set touch surface dimensions for zone detection
+   */
+  setSurfaceDimensions(width: number, height: number): void {
+    this.surfaceWidth = width;
+    this.surfaceHeight = height;
   }
 
   /**
@@ -100,11 +131,18 @@ export class GestureRecognizer {
 
     // Check for long press (takes precedence if triggered)
     if (this.isLongPressTriggered) {
+      const zone = GestureRecognizer.getZone(
+        this.touchStartPosition.x, 
+        this.touchStartPosition.y, 
+        this.surfaceWidth, 
+        this.surfaceHeight
+      );
       return {
         gesture: 'long_press',
         output: 'context menu',
         haptic: 'heavy',
         confidence: 1.0,
+        zone,
         metadata: { duration },
       };
     }
@@ -113,11 +151,18 @@ export class GestureRecognizer {
     if (currentPinchScale !== undefined) {
       const scaleDelta = Math.abs(currentPinchScale - 1);
       if (scaleDelta > 0.1) {
+        const zone = GestureRecognizer.getZone(
+          this.touchStartPosition.x, 
+          this.touchStartPosition.y, 
+          this.surfaceWidth, 
+          this.surfaceHeight
+        );
         return {
           gesture: 'pinch',
           output: 'scale',
           haptic: 'medium',
           confidence: Math.min(scaleDelta * 2, 1.0),
+          zone,
           metadata: { scale: currentPinchScale },
         };
       }
@@ -126,6 +171,13 @@ export class GestureRecognizer {
     // Check for drag Z (depth translation)
     const dragMagnitude = Math.sqrt(distance.x ** 2 + distance.y ** 2);
     if (dragMagnitude > this.config.dragThresholdPx) {
+      const zone = GestureRecognizer.getZone(
+        this.touchStartPosition.x, 
+        this.touchStartPosition.y, 
+        this.surfaceWidth, 
+        this.surfaceHeight
+      );
+      
       // Determine if this is a Z-drag (vertical movement with high confidence)
       if (Math.abs(distance.y) > this.config.dragThresholdPx * 1.5) {
         return {
@@ -133,6 +185,7 @@ export class GestureRecognizer {
           output: 'translate Z',
           haptic: 'medium',
           confidence: this.config.dragZConfidenceThreshold,
+          zone,
           metadata: { distance: { x: distance.x, y: distance.y, z: distance.y } },
         };
       }
@@ -144,6 +197,7 @@ export class GestureRecognizer {
           output: 'translate X',
           haptic: 'soft',
           confidence: Math.min(dragMagnitude / 100, 1.0),
+          zone,
           metadata: { distance },
         };
       } else {
@@ -152,6 +206,7 @@ export class GestureRecognizer {
           output: 'translate Y',
           haptic: 'soft',
           confidence: Math.min(dragMagnitude / 100, 1.0),
+          zone,
           metadata: { distance },
         };
       }
@@ -160,6 +215,12 @@ export class GestureRecognizer {
     // Check for tap gestures
     const now = Date.now();
     const gapSinceLastTap = now - this.lastTapTime;
+    const zone = GestureRecognizer.getZone(
+      this.touchStartPosition.x, 
+      this.touchStartPosition.y, 
+      this.surfaceWidth, 
+      this.surfaceHeight
+    );
     
     if (duration < this.config.tapThresholdMs) {
       // Check for double tap
@@ -170,6 +231,7 @@ export class GestureRecognizer {
           output: 'confirm',
           haptic: 'double',
           confidence: 1.0,
+          zone,
           metadata: { duration, tapCount: 2 },
         };
       }
@@ -180,6 +242,7 @@ export class GestureRecognizer {
         output: 'select',
         haptic: 'light',
         confidence: 1.0,
+        zone,
         metadata: { duration, tapCount: 1 },
       };
     }
@@ -190,6 +253,7 @@ export class GestureRecognizer {
       output: '',
       haptic: 'light',
       confidence: 0,
+      zone,
       metadata: { duration },
     };
   }
@@ -215,10 +279,42 @@ export class GestureRecognizer {
     this.lastTapTime = 0;
     this.isLongPressTriggered = false;
     this.initialPinchDistance = 0;
+    this.surfaceWidth = 0;
+    this.surfaceHeight = 0;
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
       this.longPressTimer = null;
     }
+  }
+
+  /**
+   * Map touch coordinates to zone
+   * @param x - X position (0 to width)
+   * @param y - Y position (0 to height)
+   * @param width - Surface width
+   * @param height - Surface height
+   */
+  static getZone(x: number, y: number, width: number, height: number): TouchZone {
+    const thirdW = width / 3;
+    const thirdH = height / 3;
+    
+    // Determine column
+    const col = x < thirdW ? 'W' : x > thirdW * 2 ? 'E' : 'C';
+    // Determine row
+    const row = y < thirdH ? 'N' : y > thirdH * 2 ? 'S' : 'C';
+    
+    // Map to zone
+    if (col === 'C' && row === 'C') return 'CENTER';
+    if (col === 'C' && row === 'N') return 'NORTH';
+    if (col === 'C' && row === 'S') return 'SOUTH';
+    if (col === 'W' && row === 'C') return 'WEST';
+    if (col === 'E' && row === 'C') return 'EAST';
+    if (col === 'W' && row === 'N') return 'NW';
+    if (col === 'E' && row === 'N') return 'NE';
+    if (col === 'W' && row === 'S') return 'SW';
+    if (col === 'E' && row === 'S') return 'SE';
+    
+    return 'CENTER'; // Fallback
   }
 }
 
