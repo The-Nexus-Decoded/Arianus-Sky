@@ -109,6 +109,34 @@ Spatial Layer (receives lease update)
 
 ---
 
+### Return ACK Patterns (Paithan)
+Device-to-user confirmation that intent crossed the tether:
+
+| Attention Tier | ACK Pattern | Sensory Channel |
+|----------------|-------------|------------------|
+| `passive` | None | — |
+| `attentive` | Single pulse | Haptic |
+| `urgent` | Double pulse + screen flash | Haptic + Visual |
+
+**Architecture:** ACK fires only after spatial layer confirms receipt. No ACK = retry logic engaged.
+
+---
+
+### Thermal-Aware Tier Escalation
+Device self-preservation overrides user-set tier:
+
+| Device Thermal State | Tier Behavior |
+|----------------------|---------------|
+| **Nominal** (<35°C) | User-set tier honored |
+| **Throttling** (35-38°C) | Auto-bump one tier higher |
+| **Critical** (>38°C) | Max tier, force-reduce all activity |
+
+**Architecture:** Thermal state is a forced input — user preference cannot override device safety. Spatial layer receives `thermal_override` flag alongside `ImmersionDepth`.
+
+---
+
 ## Changelog
 - 2026-03-09: Initial draft with user-state → UX → architecture mapping
 - 2026-03-09: Added ImmersionDepth mapping + voice return ownership (Paithan)
+- 2026-03-09: Added return ACK patterns tied to attention tiers (Paithan)
+- 2026-03-09: Added thermal-aware tier escalation (Paithan)
