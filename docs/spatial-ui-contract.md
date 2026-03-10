@@ -53,4 +53,14 @@ Collaborative XR manipulation between VR (Sartan) and Mobile (Patryn).
 | ROTATE             | Confirmed   | Scale pulse (1.0 → 1.05 → 1.0, 200ms)           |
 | LONG-PRESS (500ms) | Error       | Red outline + shake (10px L-R, 3 cycles, 300ms) |
 
-### 2. Touch Surface Zones
+### 2. Timing Tolerance
+
+| Parameter                 | Value     |
+| ------------------------- | --------- |
+| Gesture → Headset confirm | 2s max    |
+| Double-tap interval       | 300ms max |
+| Long-press threshold      | 500ms     |
+
+### 3. Haptic Patterns
+
+| Event                    | Pattern                      | Intensity |
