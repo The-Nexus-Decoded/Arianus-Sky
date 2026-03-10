@@ -1,0 +1,219 @@
+/**
+ * Ambient Skin - Styles
+ * V1: XY-only, gesture+mode toggle, preference-driven
+ */
+
+:root {
+  /* Default (ambient) palette */
+  --primary: #4a90d9;
+  --secondary: #1a2d4a;
+  --accent: #7ab3f0;
+  --background: #0d1520;
+  --text: #c4d9f0;
+  
+  /* Glow */
+  --glow-opacity: 0.3;
+  --glow-size: 200px;
+  
+  /* Animation */
+  --transition-duration: 500ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Main skin container */
+.ambient-skin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--background);
+  border-radius: 16px;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  transition: background var(--transition-duration) var(--ease-out);
+}
+
+/* Glow layer */
+.skin-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--glow-size);
+  height: var(--glow-size);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--primary) 0%,
+    var(--accent) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-duration) var(--ease-out);
+  pointer-events: none;
+}
+
+.skin-glow.active {
+  opacity: var(--glow-opacity);
+}
+
+/* Particle layer */
+.skin-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+  transition: opacity var(--transition-duration) var(--ease-out);
+  pointer-events: none;
+  background-image: radial-gradient(
+    1px 1px at 20% 30%,
+    var(--primary) 50%,
+    transparent 50%
+  );
+  background-image: 
+    radial-gradient(1px 1px at 20% 30%, var(--primary) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 70%, var(--accent) 50%, transparent 50%),
+    radial-gradient(1px 1px at 60% 20%, var(--primary) 50%, transparent 50%),
+    radial-gradient(1px 1px at 80% 50%, var(--accent) 50%, transparent 50%),
+    radial-gradient(1px 1px at 10% 80%, var(--primary) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 90%, var(--accent) 50%, transparent 50%);
+  background-size: 100px 100px;
+  animation: particleFloat 20s linear infinite;
+}
+
+@keyframes particleFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100px); }
+}
+
+/* Content layer */
+.skin-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mode indicator */
+.mode-indicator {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  padding: 8px 16px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(var(--primary), 0.3);
+}
+
+/* Touch target */
+.touch-target {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: rgba(var(--primary), 0.1);
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+  cursor: pointer;
+}
+
+/* Active state */
+.ambient-skin.active .touch-target {
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 20px var(--primary),
+    0 0 40px var(--accent);
+}
+
+/* Gesture feedback */
+.ambient-skin[data-gesture="flick"] .touch-target {
+  animation: flickFeedback 200ms ease-out;
+}
+
+.ambient-skin[data-gesture="hold"] .touch-target {
+  animation: holdFeedback 300ms ease-in-out;
+}
+
+.ambient-skin[data-gesture="circle"] .touch-target {
+  animation: circleFeedback 400ms ease-in-out;
+}
+
+.ambient-skin[data-gesture="pinch"] .touch-target {
+  animation: pinchFeedback 200ms ease-out;
+}
+
+@keyframes flickFeedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+@keyframes holdFeedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes circleFeedback {
+  0% { transform: rotate(0deg) scale(1); }
+  100% { transform: rotate(360deg) scale(1.1); }
+}
+
+@keyframes pinchFeedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.7); }
+  100% { transform: scale(1); }
+}
+
+/* Transitioning state */
+.ambient-skin.transitioning {
+  animation: modeTransition var(--transition-duration) var(--ease-out);
+}
+
+@keyframes modeTransition {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.5);
+    transform: scale(0.95);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+/* Mode-specific styles */
+.ambient-skin[data-mode="sartan"] {
+  --primary: #00ffaa;
+  --secondary: #004433;
+  --accent: #66ffcc;
+  --background: #001a14;
+  --text: #ccffee;
+}
+
+.ambient-skin[data-mode="patryn"] {
+  --primary: #ff6b35;
+  --secondary: #331a0d;
+  --accent: #ff9955;
+  --background: #1a0d05;
+  --text: #ffd4b8;
+}
+
+/* Edge glow for sartan/patryn modes */
+.ambient-skin[data-mode="sartan"] .skin-glow,
+.ambient-skin[data-mode="patryn"] .skin-glow {
+  box-shadow: 
+    0 0 60px var(--primary),
+    inset 0 0 60px rgba(var(--secondary), 0.5);
+}

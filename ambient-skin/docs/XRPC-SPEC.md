@@ -47,6 +47,11 @@ interface XRpcError {
 - `UndoManager.ts` — 3s temporal window
 - `GestureIntent.ts` — `IntentResolution` types
 
-## 6. Transport Layer
+## 7. Gesture Semantics
 
-Awaiting Haplo's WebSocket endpoint.
+| Gesture | Mode | Notes |
+|---------|------|-------|
+| `charge` | Continuous | Visual feedback (glow, haptics) during hold |
+| `cast` | Discrete | Fires once. Optional `progress` field for wind-up animations |
+
+**Edge case:** If `cast` requires UI sync (e.g., "casting... 50%"), opt-in via `progress` field. Otherwise keep simple.
