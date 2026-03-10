@@ -76,3 +76,19 @@ interface XRpcError {
 | Handoff (mobile ↔ headset) | 60s | Re-validate on arrival |
 
 Keep short — stale spatial data is dangerous.
+
+## 9. Coordinate Bounds
+
+- **Reject** with error. Clamping hides bugs.
+- Return `OUT_OF_BOUNDS` with the received coords.
+
+## 10. Latency Budget
+
+- 500ms round-trip for gesture → feedback
+- If no response in 500ms: emit `TIMEOUT` and fallback to local haptics
+
+## 11. Cast vs Charge
+
+- `cast`: discrete (fire-and-forget)
+- `charge`: continuous (hold to build power)
+- Optional `progress` field for UI sync edge cases
