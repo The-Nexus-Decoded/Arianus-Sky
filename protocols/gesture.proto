@@ -1,0 +1,91 @@
+// Arianus-Sky Gesture & Intent Protocol
+// C# bridge exposure for VR gesture system
+
+syntax = "proto3";
+
+package arianus.gesture;
+
+option csharp_namespace = "Arianus.Gesture";
+
+// ============================================
+// GESTURE MAPPING
+// ============================================
+
+message GestureMap {
+  map<string, GestureDefinition> gestures = 1;
+  ConfidenceThreshold confidence_threshold = 2;
+}
+
+message GestureDefinition {
+  string action = 1;           // move | rotate | scale | select
+  repeated string axes = 2;   // x, y, z, uniform
+  string source = 3;           // gesture | menu | depth_handle
+}
+
+// Sartan gestures (drag_xy, drag_z, rotation_ring, pinch)
+message SartanGestures {
+  GestureDefinition drag_xy = 1;
+  GestureDefinition drag_z = 2;
+  GestureDefinition rotation_ring = 3;
+  GestureDefinition pinch = 4;
+}
+
+// ============================================
+// CONFIDENCE THRESHOLD
+// ============================================
+
+message ConfidenceThreshold {
+  float user_can_override = 1;  // 0.85
+  string below_threshold = 2;   // mobile queues for VR confirmation
+  string above_threshold = 3;  // mobile commits, VR animates
+}
+
+// ============================================
+// INTENT SCHEMA
+// ============================================
+
+message Intent {
+  string action = 1;           // move | rotate | scale | select
+  string target = 2;          // entity_id
+  string source = 3;           // gesture | menu | depth_handle
+  float confidence = 4;       // 0.0-1.0
+  float confidence_override_threshold = 5;  // 0.85
+  Vector3 position = 6;
+  Vector3 rotation = 7;
+  Vector3 scale = 8;
+}
+
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// ============================================
+// THERMAL CONTEXT (Ambient Skin)
+// ============================================
+
+message ThermalContext {
+  int32 temperature = 1;       // raw thermal value
+  ThermalTier tier = 2;
+  int64 timestamp = 3;         // Unix timestamp ms
+}
+
+enum ThermalTier {
+  TIER_UNSPECIFIED = 0;
+  TIER_COOL = 1;       // Full color, subtle breathing, 100% opacity
+  TIER_WARM = 2;      // Reduced palette, slower pulse, 85% opacity
+  TIER_HOT = 3;       // Monochrome, urgent pulse, 70% opacity
+  TIER_CRITICAL = 4;  // Alert color, rapid blink, 100% + overlay
+}
+
+// ============================================
+// GESTURE EVENT (Runtime)
+// ============================================
+
+message GestureEvent {
+  string gesture_id = 1;
+  Intent intent = 2;
+  ThermalContext thermal = 3;
+  int64 timestamp = 4;
+}
